@@ -62,9 +62,9 @@ export function AboutRoom() {
 
             {/* 버튼 */}
             <InteractiveButton
-                position={[0, 0.3, 2]}
+                position={[0, 0.3, 1]}
                 onClick={() => setCurrentRoom('projects')}
-                label="Projects"
+                label="Go to Projects Room!"
             />
         </>
     );

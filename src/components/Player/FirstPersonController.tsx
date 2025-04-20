@@ -1,14 +1,21 @@
-// import { PointerLockControls, useKeyboardControls } from '@react-three/drei';
 import { PointerLockControls } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useRef } from 'react';
+import {
+    forwardRef,
+    useEffect,
+    useRef,
+    useImperativeHandle,
+} from 'react';
 import * as THREE from 'three';
 
-export function FirstPersonController() {
+// 👇 ref를 외부로 전달할 수 있게 forwardRef 사용
+export const FirstPersonController = forwardRef<THREE.Camera>((_, ref) => {
     const { camera } = useThree();
-    // const velocity = useRef(new THREE.Vector3());
     const direction = new THREE.Vector3();
     const keys = useRef<{ [key: string]: boolean }>({});
+
+    // 👇 외부에서 camera에 접근할 수 있도록 expose
+    useImperativeHandle(ref, () => camera, [camera]);
 
     // 키 입력 처리
     useEffect(() => {
@@ -40,13 +47,12 @@ export function FirstPersonController() {
         if (direction.length() > 0) {
             direction.normalize();
 
-            // 카메라의 회전 방향 기준으로 이동 방향 적용
             const move = new THREE.Vector3(direction.x, 0, direction.z);
-            move.applyEuler(camera.rotation); // 현재 카메라의 회전 방향 기준 이동
+            move.applyEuler(camera.rotation);
             move.multiplyScalar(moveSpeed * delta);
             camera.position.add(move);
         }
     });
 
     return <PointerLockControls />;
-}
+});
