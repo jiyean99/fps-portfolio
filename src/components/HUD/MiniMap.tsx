@@ -1,31 +1,64 @@
-import { useFrame, useThree } from '@react-three/fiber';
-import { useRef } from 'react';
-import * as THREE from 'three';
+import React from 'react';
+import { useCursor } from '../../contexts/CursorContext';
 
 interface MiniMapProps {
-    playerRef: React.RefObject<THREE.Mesh>;
+  playerPosition: [number, number, number];
+  mapSize: number;
 }
 
-export function MiniMap({ playerRef }: MiniMapProps) {
-    const miniMapCamera = useRef(new THREE.PerspectiveCamera(50, 1, 0.1, 100));
-    const miniMapSize = 150;
-    const { gl, scene } = useThree();
+const containerStyle: React.CSSProperties = {
+  position: 'fixed',
+  top: '20px',
+  left: '20px',
+  width: '150px',
+  height: '150px',
+  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  borderRadius: '8px',
+  padding: '10px',
+  cursor: 'pointer',
+  zIndex: 1000,
+};
 
-    useFrame(() => {
-        if (playerRef.current) {
-            const playerPos = playerRef.current.position;
-            miniMapCamera.current.position.set(playerPos.x, playerPos.y + 15, playerPos.z);
-            miniMapCamera.current.lookAt(playerPos);
-        }
+const mapStyle: React.CSSProperties = {
+  width: '100%',
+  height: '100%',
+  border: '1px solid rgba(255, 255, 255, 0.3)',
+  position: 'relative',
+};
 
-        const prevViewport = gl.getViewport(new THREE.Vector4());
-        gl.setViewport(10, 10, miniMapSize, miniMapSize); // 왼쪽 아래 코너
-        gl.setScissor(10, 10, miniMapSize, miniMapSize);
-        gl.setScissorTest(true);
-        gl.render(scene, miniMapCamera.current);
-        gl.setViewport(prevViewport);
-        gl.setScissorTest(false);
-    });
+const playerMarkerStyle: React.CSSProperties = {
+  width: '8px',
+  height: '8px',
+  backgroundColor: '#4CAF50',
+  borderRadius: '50%',
+  position: 'absolute',
+  transform: 'translate(-50%, -50%)',
+};
 
-    return null;
-}
+export const MiniMap: React.FC<MiniMapProps> = ({ playerPosition, mapSize }) => {
+  const { setIsLocked } = useCursor();
+  const [x, y] = playerPosition;
+  
+  // Convert world coordinates to minimap coordinates (0-100%)
+  const markerX = ((x + mapSize / 2) / mapSize) * 100;
+  const markerY = ((y + mapSize / 2) / mapSize) * 100;
+
+  const handleClick = () => {
+    setIsLocked(false);
+    document.exitPointerLock();
+  };
+
+  return (
+    <div style={containerStyle} onClick={handleClick}>
+      <div style={mapStyle}>
+        <div
+          style={{
+            ...playerMarkerStyle,
+            left: `${markerX}%`,
+            top: `${markerY}%`,
+          }}
+        />
+      </div>
+    </div>
+  );
+}; 
